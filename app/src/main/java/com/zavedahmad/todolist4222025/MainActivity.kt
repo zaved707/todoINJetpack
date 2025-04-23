@@ -26,11 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-
+import androidx.lifecycle.ViewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zavedahmad.todolist4222025.ui.theme.TodoList4222025Theme
 import java.text.SimpleDateFormat
 
@@ -42,26 +42,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TodoList4222025Theme {
-                TodoPage()
+                val viewModel : TodoViewModel = viewModel()
+                TodoPage(viewModel)
             }
         }
     }
 }
 
-data class todoItem(val task: String, val id: Int, val createdAt: Long)
+
 
 @Composable
-fun TodoPage() {
-    var todoItems = remember {
-        mutableStateListOf(
-            todoItem(
-                "this is first task",
-                1,
-                System.currentTimeMillis()
-            ), todoItem("thisis task 2", 2, System.currentTimeMillis())
-        )
-    }
-    var inputText = remember { mutableStateOf("") }
+fun TodoPage(viewModel: TodoViewModel ) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -71,21 +63,19 @@ fun TodoPage() {
     ) {
         Row {
             OutlinedTextField(
-                inputText.value,
+                viewModel.inputText.value,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(3f),
-                onValueChange = { inputText.value = it })
+                onValueChange = { viewModel.inputText.value = it })
 
             Button(onClick = {
-                todoItems.add(
-                    todoItem(
-                        task = inputText.value,
-                        3,
-                        System.currentTimeMillis()
-                    )
-
+                val newItem= todoItem(
+                    task= viewModel.inputText.value,
+                    id= viewModel.todoItems.size +1,
+                    createdAt= System.currentTimeMillis()
                 )
-                inputText.value=""
+                viewModel.addTodoItem(newItem)
+                viewModel.inputText.value=""
             }, modifier = Modifier.weight(1f)) {
                 Text(
                     "Add",
@@ -94,7 +84,9 @@ fun TodoPage() {
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        LazyColumn(content={itemsIndexed(todoItems) {index:Int, item:todoItem ->
+
+
+        LazyColumn(content={itemsIndexed(viewModel.todoItems) {index:Int, item:todoItem ->
             Column(
                 modifier = Modifier
 
@@ -131,6 +123,10 @@ fun TodoPage() {
             }
         }})
 
+
+
+        Text(viewModel.todoItems[0].task,
+            color = MaterialTheme.colorScheme.onSurface)
 
     }
 }
